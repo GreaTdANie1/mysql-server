@@ -64,6 +64,7 @@ class Sdi_wcontext;
 static const std::set<String_type> default_valid_option_keys = {
     "avg_row_length",
     "checksum",
+    "circular_max_rows",
     "compress",
     "connection_string",
     "delay_key_write",

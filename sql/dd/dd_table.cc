@@ -2003,6 +2003,9 @@ static bool fill_dd_table_from_create_info(
   if (create_info->min_rows)
     table_options->set("min_rows", create_info->min_rows);
 
+  if (create_info->circular_max_rows)
+    table_options->set("circular_max_rows", create_info->circular_max_rows);
+
   //
   // Options encoded in HA_CREATE_INFO::table_options.
   //

@@ -2386,6 +2386,16 @@ typedef PT_traceable_create_table_option<TYPE_AND_REF(HA_CREATE_INFO::min_rows),
     PT_create_min_rows_option;
 
 /**
+  Node for the @SQL{CIRCULAR_MAX_ROWS [=] @B{@<integer@>}} table option
+
+  @ingroup ptn_create_or_alter_table_options
+*/
+typedef PT_traceable_create_table_option<TYPE_AND_REF(
+                                             HA_CREATE_INFO::circular_max_rows),
+                                         HA_CREATE_USED_CIRCULAR_MAX_ROWS>
+    PT_create_circular_max_rows_option;
+
+/**
   Node for the @SQL{AVG_ROW_LENGTH_ROWS [=] @B{@<integer@>}} table option
 
   @ingroup ptn_create_or_alter_table_options

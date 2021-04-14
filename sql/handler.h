@@ -792,6 +792,8 @@ constexpr const uint64_t HA_CREATE_USED_READ_ONLY{1ULL << 34};
 */
 constexpr const uint64_t HA_CREATE_USED_AUTOEXTEND_SIZE{1ULL << 35};
 
+constexpr const uint64_t HA_CREATE_USED_CIRCULAR_MAX_ROWS{ 1ULL << 36 };
+
 /*
   End of bits used in used_fields
 */
@@ -2704,6 +2706,7 @@ struct HA_CREATE_INFO {
   const char *alias{nullptr};
   ulonglong max_rows{0};
   ulonglong min_rows{0};
+  ulonglong circular_max_rows{0};
   ulonglong auto_increment_value{0};
   ulong table_options{0};
   ulong avg_row_length{0};

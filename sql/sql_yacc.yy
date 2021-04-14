@@ -1355,6 +1355,8 @@ void warn_about_deprecated_binary(THD *thd)
 %token<lexer.keyword> SOURCE_USER_SYM 1187                     /* MYSQL */
 %token<lexer.keyword> SOURCE_ZSTD_COMPRESSION_LEVEL_SYM 1188   /* MYSQL */
 
+%token<lexer.keyword> CIRCULAR_MAX_ROWS 1189 /* Feature: circular table */
+
 /*
   Precedence rules used to resolve the ambiguity when using keywords as idents
   in the case e.g.:
@@ -6641,6 +6643,10 @@ create_table_option:
         | MIN_ROWS opt_equal ulonglong_num
           {
             $$= NEW_PTN PT_create_min_rows_option($3);
+          }
+        | CIRCULAR_MAX_ROWS opt_equal ulonglong_num
+          {
+            $$= NEW_PTN PT_create_circular_max_rows_option($3);
           }
         | AVG_ROW_LENGTH opt_equal ulong_num
           {
@@ -15082,6 +15088,7 @@ ident_keywords_unambiguous:
         | CHANGED
         | CHANNEL_SYM
         | CIPHER_SYM
+        | CIRCULAR_MAX_ROWS
         | CLASS_ORIGIN_SYM
         | CLIENT_SYM
         | CLOSE_SYM
