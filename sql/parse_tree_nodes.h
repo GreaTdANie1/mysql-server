@@ -2386,6 +2386,16 @@ typedef PT_traceable_create_table_option<TYPE_AND_REF(HA_CREATE_INFO::min_rows),
     PT_create_min_rows_option;
 
 /**
+  Node for the @SQL{CIRCULAR_MAX_ROWS [=] @B{@<integer@>}} table option
+
+  @ingroup ptn_create_or_alter_table_options
+*/
+typedef PT_traceable_create_table_option<TYPE_AND_REF(
+                                             HA_CREATE_INFO::circular_max_rows),
+                                         HA_CREATE_USED_CIRCULAR_MAX_ROWS>
+    PT_create_circular_max_rows_option;
+
+/**
   Node for the @SQL{AVG_ROW_LENGTH_ROWS [=] @B{@<integer@>}} table option
 
   @ingroup ptn_create_or_alter_table_options
@@ -2794,6 +2804,7 @@ class PT_column_def : public PT_table_element {
 */
 class PT_create_table_stmt final : public PT_table_ddl_stmt_base {
   bool is_temporary;
+  bool is_circular; /* feat. circular table */
   bool only_if_not_exists;
   Table_ident *table_name;
   const Mem_root_array<PT_table_element *> *opt_table_element_list;
@@ -2824,14 +2835,15 @@ class PT_create_table_stmt final : public PT_table_ddl_stmt_base {
     @param opt_query_expression       NULL or the @SQL{@B{SELECT}} clause.
   */
   PT_create_table_stmt(
-      MEM_ROOT *mem_root, bool is_temporary, bool only_if_not_exists,
-      Table_ident *table_name,
+      MEM_ROOT *mem_root, bool is_temporary, bool is_circular,
+      bool only_if_not_exists, Table_ident *table_name,
       const Mem_root_array<PT_table_element *> *opt_table_element_list,
       const Mem_root_array<PT_create_table_option *> *opt_create_table_options,
       PT_partition *opt_partitioning, On_duplicate on_duplicate,
       PT_query_primary *opt_query_expression)
       : PT_table_ddl_stmt_base(mem_root),
         is_temporary(is_temporary),
+        is_circular(is_circular),
         only_if_not_exists(only_if_not_exists),
         table_name(table_name),
         opt_table_element_list(opt_table_element_list),
@@ -2852,6 +2864,7 @@ class PT_create_table_stmt final : public PT_table_ddl_stmt_base {
                        Table_ident *opt_like_clause)
       : PT_table_ddl_stmt_base(mem_root),
         is_temporary(is_temporary),
+        is_circular(false),
         only_if_not_exists(only_if_not_exists),
         table_name(table_name),
         opt_table_element_list(nullptr),

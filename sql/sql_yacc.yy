@@ -1355,6 +1355,9 @@ void warn_about_deprecated_binary(THD *thd)
 %token<lexer.keyword> SOURCE_USER_SYM 1187                     /* MYSQL */
 %token<lexer.keyword> SOURCE_ZSTD_COMPRESSION_LEVEL_SYM 1188   /* MYSQL */
 
+%token<lexer.keyword> CIRCULAR 1189 /* Feature: circular table */
+%token<lexer.keyword> CIRCULAR_MAX_ROWS 1190 /* Feature: circular table */
+
 /*
   Precedence rules used to resolve the ambiguity when using keywords as idents
   in the case e.g.:
@@ -1653,7 +1656,7 @@ void warn_about_deprecated_binary(THD *thd)
 %type <xa_option_type> opt_one_phase;
 
 %type <is_not_empty> opt_convert_xid opt_ignore opt_linear opt_bin_mod
-        opt_if_not_exists opt_temporary
+        opt_if_not_exists opt_temporary opt_circular
         opt_grant_option opt_with_admin_option
         opt_full opt_extended
         opt_ignore_leaves
@@ -3293,7 +3296,7 @@ create_table_stmt:
           CREATE opt_temporary TABLE_SYM opt_if_not_exists table_ident
           '(' table_element_list ')' opt_create_table_options_etc
           {
-            $$= NEW_PTN PT_create_table_stmt(YYMEM_ROOT, $2, $4, $5,
+            $$= NEW_PTN PT_create_table_stmt(YYMEM_ROOT, $2, false, $4, $5,
                                              $7,
                                              $9.opt_create_table_options,
                                              $9.opt_partitioning,
@@ -3303,7 +3306,7 @@ create_table_stmt:
         | CREATE opt_temporary TABLE_SYM opt_if_not_exists table_ident
           opt_create_table_options_etc
           {
-            $$= NEW_PTN PT_create_table_stmt(YYMEM_ROOT, $2, $4, $5,
+            $$= NEW_PTN PT_create_table_stmt(YYMEM_ROOT, $2, false, $4, $5,
                                              NULL,
                                              $6.opt_create_table_options,
                                              $6.opt_partitioning,
@@ -6641,6 +6644,10 @@ create_table_option:
         | MIN_ROWS opt_equal ulonglong_num
           {
             $$= NEW_PTN PT_create_min_rows_option($3);
+          }
+        | CIRCULAR_MAX_ROWS opt_equal ulonglong_num
+          {
+            $$= NEW_PTN PT_create_circular_max_rows_option($3);
           }
         | AVG_ROW_LENGTH opt_equal ulong_num
           {
@@ -12917,6 +12924,11 @@ opt_temporary:
         | TEMPORARY   { $$= true; }
         ;
 
+opt_circular:
+          /* empty */ { $$= false; }
+        | CIRCULAR   { $$= true; }
+        ;
+
 opt_drop_ts_options:
         /* empty*/ { $$= NULL; }
       | drop_ts_option_list
@@ -15082,6 +15094,8 @@ ident_keywords_unambiguous:
         | CHANGED
         | CHANNEL_SYM
         | CIPHER_SYM
+        | CIRCULAR
+        | CIRCULAR_MAX_ROWS
         | CLASS_ORIGIN_SYM
         | CLIENT_SYM
         | CLOSE_SYM
