@@ -3112,6 +3112,12 @@ static inline dict_table_t *dd_fill_dict_table(const Table *dd_tab,
     dd_fill_instant_columns(dd_tab->table(), m_table);
   }
 
+  uint64 circular_max_rows;
+  if (dd_tab->table().options().exists("circular_max_rows") &&
+      !dd_tab->table().options().get("circular_max_rows", &circular_max_rows)) {
+    m_table->circular_max_rows = circular_max_rows;
+  }
+
   mem_heap_free(heap);
 
   return m_table;

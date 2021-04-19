@@ -286,7 +286,7 @@ class Sql_cmd_insert_base : public Sql_cmd_dml {
   */
   mem_root_deque<Item *> values_field_list;
 
-  const enum_duplicates duplicates;
+  enum_duplicates duplicates; // @danielye: is it ok to be not const?
 
   explicit Sql_cmd_insert_base(bool is_replace_arg,
                                enum_duplicates duplicates_arg)

@@ -792,7 +792,7 @@ constexpr const uint64_t HA_CREATE_USED_READ_ONLY{1ULL << 34};
 */
 constexpr const uint64_t HA_CREATE_USED_AUTOEXTEND_SIZE{1ULL << 35};
 
-constexpr const uint64_t HA_CREATE_USED_CIRCULAR_MAX_ROWS{ 1ULL << 36 };
+constexpr const uint64_t HA_CREATE_USED_CIRCULAR_MAX_ROWS{1ULL << 36};
 
 /*
   End of bits used in used_fields
@@ -5584,6 +5584,10 @@ class handler {
                            key_part_map keypart_map);
 
   int ha_index_next_pushed(uchar *buf);
+
+  virtual bool is_circular() { return false; }
+
+  virtual uint64 circular_max_rows() { return 0;  }
 
  protected:
   virtual int index_read_pushed(uchar *, const uchar *, key_part_map) {

@@ -6689,6 +6689,21 @@ static MY_ATTRIBUTE((warn_unused_result)) dberr_t
   return err;
 }
 
+static void innobase_update_circular_max_rows(ha_innobase_inplace_ctx *ctx, dd::Table *dd_table)
+{
+  uint64& cmr_in_mem = ctx->prebuilt->table->circular_max_rows;
+
+  uint64 circular_max_rows;
+  if (dd_table->options().exists("circular_max_rows") &&
+    !dd_table->options().get("circular_max_rows", &circular_max_rows))
+  {
+    if (circular_max_rows > cmr_in_mem)
+    {
+      cmr_in_mem = circular_max_rows;
+    }
+  }
+}
+
 /** Discard the foreign key cache if anyone is affected by current
 column rename. This is only used for rebuild case.
 @param[in]	ha_alter_info	data used during in-place alter
@@ -7628,6 +7643,8 @@ rollback_trx:
         rename_indexes_in_cache(ctx, ha_alter_info);
       }
     }
+
+    innobase_update_circular_max_rows(ctx, &new_dd_tab->table());
 
     dict_mem_table_free_foreign_vcol_set(ctx->new_table);
     dict_mem_table_fill_foreign_vcol_set(ctx->new_table);

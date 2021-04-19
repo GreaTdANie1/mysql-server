@@ -486,15 +486,20 @@ bool Sql_cmd_insert_values::execute_inner(THD *thd) {
   */
   const bool manage_defaults = column_count > 0 ||  // 1)
                                value_count == 0;    // 2)
-  COPY_INFO info(COPY_INFO::INSERT_OPERATION, &insert_field_list,
-                 manage_defaults, duplicates);
-  COPY_INFO update(COPY_INFO::UPDATE_OPERATION, &update_field_list,
-                   &update_value_list);
 
   SELECT_LEX *const select_lex = lex->select_lex;
 
   TABLE_LIST *const table_list = lex->insert_table;
   TABLE *const insert_table = lex->insert_table_leaf->table;
+
+  if (insert_table->file->is_circular()) {
+    duplicates = DUP_REPLACE;
+  }
+
+  COPY_INFO info(COPY_INFO::INSERT_OPERATION, &insert_field_list,
+                 manage_defaults, duplicates);
+  COPY_INFO update(COPY_INFO::UPDATE_OPERATION, &update_field_list,
+                   &update_value_list);
 
   if (duplicates == DUP_UPDATE || duplicates == DUP_REPLACE)
     prepare_for_positional_update(insert_table, table_list);

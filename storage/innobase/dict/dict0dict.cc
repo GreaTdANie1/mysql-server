@@ -842,7 +842,7 @@ void dict_table_autoinc_update_if_greater(dict_table_t *table,
                                           ib_uint64_t value) {
   ut_ad(dict_table_autoinc_own(table));
 
-  if (value > table->autoinc) {
+  if (value > table->autoinc || table->circular_max_rows) {
     table->autoinc = value;
   }
 }

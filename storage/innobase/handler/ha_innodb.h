@@ -464,6 +464,12 @@ class ha_innobase : public handler {
   bool check_if_incompatible_data(HA_CREATE_INFO *info,
                                   uint table_changes) override;
 
+  bool is_circular() override { return m_prebuilt->table->circular_max_rows; }
+
+  uint64 circular_max_rows() override {
+    return m_prebuilt->table->circular_max_rows;
+  }
+
  private:
   /** @name Multi Range Read interface
   @{ */

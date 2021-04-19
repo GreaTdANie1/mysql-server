@@ -3546,7 +3546,8 @@ int handler::ha_index_next_pushed(uchar *buf) {
   @verbatim 1,5,15,25,35,... @endverbatim
 */
 inline ulonglong compute_next_insert_id(ulonglong nr,
-                                        struct System_variables *variables) {
+                                        struct System_variables *variables,
+                                        uint64 circular_max_rows = 0) {
   const ulonglong save_nr = nr;
 
   if (variables->auto_increment_increment == 1)
@@ -3559,7 +3560,9 @@ inline ulonglong compute_next_insert_id(ulonglong nr,
           variables->auto_increment_offset);
   }
 
-  if (unlikely(nr <= save_nr)) return ULLONG_MAX;
+  if (circular_max_rows && nr > circular_max_rows) nr %= circular_max_rows;
+
+  if (unlikely(nr <= save_nr && !circular_max_rows)) return ULLONG_MAX;
 
   return nr;
 }
@@ -3701,7 +3704,7 @@ int handler::update_auto_increment() {
     next_insert_id is a "cursor" into the reserved interval, it may go greater
     than the interval, but not smaller.
   */
-  DBUG_ASSERT(next_insert_id >= auto_inc_interval_for_cur_row.minimum());
+  DBUG_ASSERT(next_insert_id >= auto_inc_interval_for_cur_row.minimum() || is_circular());
 
   if ((nr = table->next_number_field->val_int()) != 0 ||
       (table->autoinc_field_has_explicit_non_null_value &&
@@ -3809,7 +3812,7 @@ int handler::update_auto_increment() {
         if it did we cannot do anything about it (calling the engine again
         will not help as we inserted no row).
       */
-      nr = compute_next_insert_id(nr - 1, variables);
+      nr = compute_next_insert_id(nr - 1, variables, circular_max_rows());
     }
 
     if (table->s->next_number_keypart == 0) {
@@ -3868,13 +3871,16 @@ int handler::update_auto_increment() {
     record_first_successful_insert_id_in_cur_stmt()
     which will set first_successful_insert_id_in_cur_stmt if it's not
     already set.
+
+    If circular, consider it a REPLACE that specifies key value.
   */
-  insert_id_for_cur_row = nr;
+  insert_id_for_cur_row = (is_circular() ? 0 : nr);
   /*
     Set next insert id to point to next auto-increment value to be able to
     handle multi-row statements.
   */
-  set_next_insert_id(compute_next_insert_id(nr, variables));
+  set_next_insert_id(
+      compute_next_insert_id(nr, variables, circular_max_rows()));
 
   return 0;
 }

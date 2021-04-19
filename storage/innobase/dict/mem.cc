@@ -228,6 +228,8 @@ dict_table_t *dict_mem_table_create(
   table->n_cols = table->n_t_cols - table->n_v_cols;
   table->n_instant_cols = table->n_cols;
 
+  table->circular_max_rows = 0;
+
   table->cols = static_cast<dict_col_t *>(
       mem_heap_alloc(heap, table->n_cols * sizeof(dict_col_t)));
   table->v_cols = static_cast<dict_v_col_t *>(

@@ -346,7 +346,9 @@ ulonglong innobase_next_autoinc(
     ulonglong need,      /*!< in: count of values needed */
     ulonglong step,      /*!< in: AUTOINC increment step */
     ulonglong offset,    /*!< in: AUTOINC offset */
-    ulonglong max_value) /*!< in: max value for type */
+    ulonglong max_value, /*!< in: max value for type */
+    ulonglong *circular_max_rows =
+        nullptr) /*!< in: max rows if table is circular*/
     MY_ATTRIBUTE((warn_unused_result));
 
 /**********************************************************************

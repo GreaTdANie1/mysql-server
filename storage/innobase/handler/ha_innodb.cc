@@ -2426,11 +2426,12 @@ dberr_t Encryption::validate(const char *option) noexcept {
  the multi-value INSERT above.
  @return the next value */
 ulonglong innobase_next_autoinc(
-    ulonglong current,   /*!< in: Current value */
-    ulonglong need,      /*!< in: count of values needed */
-    ulonglong step,      /*!< in: AUTOINC increment step */
-    ulonglong offset,    /*!< in: AUTOINC offset */
-    ulonglong max_value) /*!< in: max value for type */
+    ulonglong current,            /*!< in: Current value */
+    ulonglong need,               /*!< in: count of values needed */
+    ulonglong step,               /*!< in: AUTOINC increment step */
+    ulonglong offset,             /*!< in: AUTOINC offset */
+    ulonglong max_value,          /*!< in: max value for type */
+    ulonglong *circular_max_rows) /*!< in: max rows if table is circular*/
 {
   ulonglong next_value;
   ulonglong block = need * step;
@@ -2492,6 +2493,17 @@ ulonglong innobase_next_autoinc(
       }
     } else {
       next_value = max_value;
+    }
+
+    if (next_value < max_value /* max rows being max_value should not be
+                                  allowed, since it can cause the last row being
+                                  overwriting infinitely */
+        && circular_max_rows && *circular_max_rows &&
+        next_value > *circular_max_rows) {
+      next_value %= *circular_max_rows;
+      if (next_value == 0) {
+        next_value = *circular_max_rows;
+      }
     }
   }
 
@@ -8695,8 +8707,9 @@ int ha_innobase::write_row(uchar *record) /*!< in: a row in MySQL format */
             offset = m_prebuilt->autoinc_offset;
             increment = m_prebuilt->autoinc_increment;
 
-            auto_inc = innobase_next_autoinc(auto_inc, 1, increment, offset,
-                                             col_max_value);
+            auto_inc = innobase_next_autoinc(
+                auto_inc, 1, increment, offset, col_max_value,
+                &m_prebuilt->table->circular_max_rows);
 
             err = innobase_set_max_autoinc(auto_inc);
 
@@ -9395,7 +9408,8 @@ int ha_innobase::update_row(const uchar *old_row, uchar *new_row) {
       increment = m_prebuilt->autoinc_increment;
 
       auto_inc =
-          innobase_next_autoinc(auto_inc, 1, increment, offset, col_max_value);
+          innobase_next_autoinc(auto_inc, 1, increment, offset, col_max_value,
+                                &m_prebuilt->table->circular_max_rows);
 
       error = innobase_set_max_autoinc(auto_inc);
     }
@@ -10917,6 +10931,12 @@ inline MY_ATTRIBUTE((warn_unused_result)) int create_table_info_t::
 
   table = dict_mem_table_create(m_table_name, space_id, actual_n_cols, num_v,
                                 num_m_v, m_flags, m_flags2);
+
+  uint64 circular_max_rows;
+  if (dd_table && dd_table->options().exists("circular_max_rows") &&
+      !dd_table->options().get("circular_max_rows", &circular_max_rows)) {
+    table->circular_max_rows = circular_max_rows;
+  }
 
   /* Set dd tablespace id */
   table->dd_space_id = dd_space_id;
@@ -19096,11 +19116,13 @@ void ha_innobase::get_auto_increment(
 
     /* Compute the last value in the interval */
     next_value = innobase_next_autoinc(current, *nb_reserved_values, increment,
-                                       offset, col_max_value);
+                                       offset, col_max_value,
+                                       &m_prebuilt->table->circular_max_rows);
 
     m_prebuilt->autoinc_last_value = next_value;
 
-    if (m_prebuilt->autoinc_last_value < *first_value) {
+    if (m_prebuilt->autoinc_last_value < *first_value &&
+        !m_prebuilt->table->circular_max_rows) {
       *first_value = (~(ulonglong)0);
     } else {
       /* Update the table autoinc variable */
