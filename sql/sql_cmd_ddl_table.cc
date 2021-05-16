@@ -176,6 +176,20 @@ bool Sql_cmd_create_table::execute(THD *thd) {
     return true;
   }
 
+  if (create_info.circular_max_rows) {
+    if (create_info.options & HA_LEX_CREATE_TMP_TABLE) {
+      my_error(ER_CIRCULAR_TABLE_IS_TEMP, MYF(0));
+      return true;
+    }
+    DBUG_ASSERT(create_info.db_type != nullptr);
+    if (circular_table_supported_db_types.find(create_info.db_type->db_type) ==
+        circular_table_supported_db_types.end()) {
+      push_warning(thd, Sql_condition::SL_WARNING,
+                   ER_WARN_CIRCULAR_TABLE_ENGINE_UNSUPPORTED,
+                   ER_THD(thd, ER_WARN_CIRCULAR_TABLE_ENGINE_UNSUPPORTED));
+    }
+  }
+
   /*
     Assign target tablespace name to enable locking in lock_table_names().
     Reject invalid names.

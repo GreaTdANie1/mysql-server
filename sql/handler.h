@@ -166,6 +166,8 @@ extern const char *binlog_format_names[];
 extern TYPELIB tx_isolation_typelib;
 extern ulong total_ha_2pc;
 
+extern std::set<enum legacy_db_type> circular_table_supported_db_types;
+
 // the following is for checking tables
 
 #define HA_ADMIN_ALREADY_DONE 1

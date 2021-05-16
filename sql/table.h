@@ -766,6 +766,7 @@ struct TABLE_SHARE {
   Key_map keys_for_keyread;
   ha_rows min_rows{0}, max_rows{0}; /* create information */
   ulong avg_row_length{0};          /* create information */
+  ulonglong circular_max_rows{0};   /* create information for circular tables */
   ulong mysql_version{0};           /* 0 if .frm is created before 5.0 */
   ulong reclength{0};               /* Recordlength */
   ulong stored_rec_length{0};       /* Stored record length

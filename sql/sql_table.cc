@@ -7890,6 +7890,10 @@ bool mysql_prepare_create_table(
     my_error(ER_WRONG_AUTO_KEY, MYF(0));
     return true;
   }
+  if (!auto_increment && create_info->circular_max_rows) {
+    my_error(ER_CIRCULAR_TABLE_NO_AUTOINC_FIELD, MYF(0));
+    return true;
+  }
   if (auto_increment && (file->ha_table_flags() & HA_NO_AUTO_INCREMENT)) {
     my_error(ER_TABLE_CANT_HANDLE_AUTO_INCREMENT, MYF(0));
     return true;
@@ -15932,6 +15936,13 @@ bool mysql_alter_table(THD *thd, const char *new_db, const char *new_name,
       (create_info->used_fields & HA_CREATE_USED_UNION) &&
       (table->s->tmp_table == NO_TMP_TABLE)) {
     my_error(ER_LOCK_OR_ACTIVE_TRANSACTION, MYF(0));
+    return true;
+  }
+
+  /* Altering a regular table into a circular table is currently not allowed. */
+  if (create_info->circular_max_rows && !table->s->circular_max_rows)
+  {
+    my_error(ER_CIRCULAR_TABLE_MAKE_BY_ALTER, MYF(0));
     return true;
   }
 

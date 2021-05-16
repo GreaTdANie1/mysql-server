@@ -289,6 +289,8 @@ const char *tx_isolation_names[] = {"READ-UNCOMMITTED", "READ-COMMITTED",
 TYPELIB tx_isolation_typelib = {array_elements(tx_isolation_names) - 1, "",
                                 tx_isolation_names, nullptr};
 
+std::set<enum legacy_db_type> circular_table_supported_db_types = { DB_TYPE_INNODB };
+
 // Called for each SE to check if given db.table_name is a system table.
 static bool check_engine_system_table_handlerton(THD *unused, plugin_ref plugin,
                                                  void *arg);
@@ -3704,7 +3706,8 @@ int handler::update_auto_increment() {
     next_insert_id is a "cursor" into the reserved interval, it may go greater
     than the interval, but not smaller.
   */
-  DBUG_ASSERT(next_insert_id >= auto_inc_interval_for_cur_row.minimum() || is_circular());
+  DBUG_ASSERT(next_insert_id >= auto_inc_interval_for_cur_row.minimum() ||
+              is_circular());
 
   if ((nr = table->next_number_field->val_int()) != 0 ||
       (table->autoinc_field_has_explicit_non_null_value &&
@@ -3715,6 +3718,14 @@ int handler::update_auto_increment() {
     if (thd->is_error() &&
         thd->get_stmt_da()->mysql_errno() == ER_TRUNCATED_WRONG_VALUE)
       return HA_ERR_AUTOINC_ERANGE;
+
+    /*
+      We do not want the explicit value bigger than circular_max_rows.
+      TODO: Maybe add a system variable to determine how to treat such behavior.
+     */
+    if (is_circular() && nr > circular_max_rows()) {
+      return HA_ERR_AUTOINC_ERANGE;  // TODO: add a new error
+    }
 
     /*
       Update next_insert_id if we had already generated a value in this
