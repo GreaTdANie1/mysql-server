@@ -2309,7 +2309,7 @@ bool store_create_info(THD *thd, TABLE_LIST *table_list, String *packet,
       }
     }
 
-    uint64 circular_max_rows;
+    ulonglong circular_max_rows;
     if (table_obj->options().exists("circular_max_rows") &&
         !table_obj->options().get("circular_max_rows", &circular_max_rows) &&
         circular_max_rows > 0) {

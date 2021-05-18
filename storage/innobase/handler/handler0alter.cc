@@ -6691,9 +6691,9 @@ static MY_ATTRIBUTE((warn_unused_result)) dberr_t
 
 static void innobase_update_circular_max_rows(ha_innobase_inplace_ctx *ctx, dd::Table *dd_table)
 {
-  uint64& cmr_in_mem = ctx->prebuilt->table->circular_max_rows;
+  ulonglong& cmr_in_mem = ctx->prebuilt->table->circular_max_rows;
 
-  uint64 circular_max_rows;
+  ulonglong circular_max_rows;
   if (dd_table->options().exists("circular_max_rows") &&
     !dd_table->options().get("circular_max_rows", &circular_max_rows))
   {

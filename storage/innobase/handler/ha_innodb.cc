@@ -10932,7 +10932,7 @@ inline MY_ATTRIBUTE((warn_unused_result)) int create_table_info_t::
   table = dict_mem_table_create(m_table_name, space_id, actual_n_cols, num_v,
                                 num_m_v, m_flags, m_flags2);
 
-  uint64 circular_max_rows;
+  ulonglong circular_max_rows;
   if (dd_table && dd_table->options().exists("circular_max_rows") &&
       !dd_table->options().get("circular_max_rows", &circular_max_rows)) {
     table->circular_max_rows = circular_max_rows;

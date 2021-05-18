@@ -3549,7 +3549,7 @@ int handler::ha_index_next_pushed(uchar *buf) {
 */
 inline ulonglong compute_next_insert_id(ulonglong nr,
                                         struct System_variables *variables,
-                                        uint64 circular_max_rows = 0) {
+                                        ulonglong circular_max_rows = 0) {
   const ulonglong save_nr = nr;
 
   if (variables->auto_increment_increment == 1)

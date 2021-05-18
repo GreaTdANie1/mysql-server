@@ -1953,7 +1953,7 @@ detect this and will eventually quit sooner. */
   which can not happen concurrently to thread executing the trx. */
   std::atomic<const trx_t *> autoinc_trx;
 
-  uint64 circular_max_rows;
+  ulonglong circular_max_rows;
 
   /** @} */
 

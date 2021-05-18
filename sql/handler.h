@@ -166,8 +166,6 @@ extern const char *binlog_format_names[];
 extern TYPELIB tx_isolation_typelib;
 extern ulong total_ha_2pc;
 
-extern std::set<enum legacy_db_type> circular_table_supported_db_types;
-
 // the following is for checking tables
 
 #define HA_ADMIN_ALREADY_DONE 1
@@ -665,6 +663,8 @@ enum legacy_db_type {
   DB_TYPE_FIRST_DYNAMIC = 42,
   DB_TYPE_DEFAULT = 127  // Must be last
 };
+
+extern std::set<enum legacy_db_type> circular_table_supported_db_types;
 
 enum row_type : int {
   ROW_TYPE_NOT_USED = -1,
@@ -5589,7 +5589,7 @@ class handler {
 
   virtual bool is_circular() { return false; }
 
-  virtual uint64 circular_max_rows() { return 0;  }
+  virtual ulonglong circular_max_rows() { return 0;  }
 
  protected:
   virtual int index_read_pushed(uchar *, const uchar *, key_part_map) {
